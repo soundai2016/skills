@@ -1,6 +1,6 @@
 {
   "name": "soundai-tts-provider",
-  "version": "2026.3.14",
+  "version": "1.0.2",
   "private": true,
   "description": "SoundAI TTS Provider for OpenClaw",
   "type": "module",
