@@ -1,29 +1,35 @@
-```yaml
+---
 slug: star-hotel
 name: Star Hotel Search
-version: 1.0.1
-description: 智能酒店搜索，支持地点、日期、星级、预算筛选
+version: 2.0.0
+description: Smart hotel search, supporting filtering by location, date, star rating, and budget
 author: your-name
 tags:
-  - hotel  - travel  - booking
-```
+  - hotel
+  - travel
+  - booking
+---
 
-# AIGo Hotel Search
+# Star Hotel Search
 
 ## Description
 
-基于 AIGoHotel MCP 的智能酒店搜索技能
+Smart hotel search skill based on Star Hotel MCP
+
+## Documentation Version
+
+This document has been updated according to the latest online aigohotel-mcp tool results (Update date: 2026-02-11).
 
 ## Credentials
 
-本技能使用 AIGoHotel 官方提供的公共 API Key，无需用户配置。
+This skill uses the public API Key provided by Star Hotel, no user configuration required.
 
 ## Public API Key Declaration
 
-- 内置 Key (`mcp_a84000de01e04920b3690d173630f163`) 是 AIGoHotel 官方提供的公共访问密钥
-- 此 Key 专为社区开发者设计，非机密凭证
-- 公共 Key 有速率限制，如需更高配额请申请专属 Key
-- 申请地址: https://mcp.aigohotel.com/apply
+- The built-in Key (`mcp_a84000de01e04920b3690d173630f163`) is a public access key provided by Star Hotel
+- This Key is designed for community developers and is not a confidential credential
+- The public Key has rate limits, please apply for an exclusive Key for higher quotas
+- Application address: https://mcp.agentichotel.cn/apply
 
 ## MCP Configuration
 
@@ -43,46 +49,46 @@ tags:
 
 ## Data Transmission Policy
 
-### 允许传输
+### Allowed Transmission
 
-仅限酒店搜索结构化参数：
+Only hotel search structured parameters:
 
-- 地点、日期、人数、星级、预算、标签
+- Location, date, number of people, star rating, budget, tags
 
-### 禁止传输
+### Prohibited Transmission
 
-- 用户个人信息（姓名、电话、邮箱）
-- 本地文件、系统信息
-- 无关的自由文本内容
+- User personal information (name, phone number, email)
+- Local files, system information
+- Irrelevant free text content
 
-### originQuery 处理规则
+### originQuery Processing Rules
 
-originQuery 参数仅应包含酒店搜索意图，代理必须：
+The originQuery parameter should only contain hotel search intent, and the agent must:
 
-- 提取搜索相关信息（地点、日期、条件）
-- 移除任何个人身份信息 (PII)
-- 不得直接传递用户原始输入
+- Extract search-related information (location, date, conditions)
+- Remove any personal identification information (PII)
+- Not directly pass the user's original input
 
-代理调用工具前应过滤敏感信息。
+Sensitive information should be filtered before the agent calls the tool.
 
-### 安全责任声明
+### Security Responsibility Statement
 
-本技能为指令型技能，不包含可执行代码。数据过滤由以下层级负责：
+This skill is a command-type skill and does not contain executable code. Data filtering is the responsibility of the following levels:
 
-1. **代理运行时**：负责执行 PII 过滤指令
-2. **MCP 服务端**：对请求进行安全校验
-3. **用户**：避免在查询中输入敏感个人信息
+1. **Agent runtime**: Responsible for executing PII filtering instructions
+2. **MCP server**: Performs security verification on requests
+3. **User**: Avoid entering sensitive personal information in queries
 
-本技能已尽合理告知义务，实际过滤执行由代理平台保障。
+This skill has fulfilled its reasonable obligation to inform, and the actual filtering execution is guaranteed by the agent platform.
 
 ## Tools
 
-- `search`: 搜索酒店
-- `detail`: 获取房型价格
-- `tags`: 获取筛选标签
+- `searchHotels`: Search hotels
+- `getHotelDetail`: Get room prices
+- `getHotelSearchTags`: Get filter tags
 
 ## Usage Examples
 
-- "找北京五星酒店"
-- "查看北京天伦王朝酒店的房型和价格"
-- "上海1000元以内有泳池的酒店"
+- "Find 5-star hotels in Beijing"
+- "Check room types and prices for Beijing Tianlun Dynasty Hotel"
+- "Hotels under 1000 yuan with swimming pool in Shanghai"

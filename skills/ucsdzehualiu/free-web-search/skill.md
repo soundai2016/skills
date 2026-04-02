@@ -1,99 +1,39 @@
 ---
 name: free-web-search
-description: >
-  Real-time web search skill for Claude Code / OpenClaw agents. Use this skill
-  whenever you need to look up current information, recent events, documentation,
-  library versions, error messages, or anything that may have changed since your
-  training cutoff. Triggers on: "search for", "look up", "find info about",
-  "what is the latest", "check online", "google", "browse", or any task where
-  up-to-date external knowledge would meaningfully improve the answer. Always
-  prefer this skill over guessing when the information might be stale.
-version: 9.3.0
-tags: [search, web, duckduckgo, bing, realtime, fast, lightweight, json]
-author: ucsdzehualiu
-dependencies:
-  - httpx>=0.27.0
-  - beautifulsoup4>=4.12.3
-  - lxml>=5.0.0
-runtime: python3.10
-setup: |
-  pip install httpx beautifulsoup4 lxml
+description: 免费Bing搜索，带今日日期，稳定可靠
+version: 7.0
+author: free-web-search
+tools:
+  - name: web_search
+    description: 联网搜索
+    script: scripts/web_search.py
+    parameters:
+      query:
+        type: string
+        description: 搜索关键词，简洁明确
+        required: true
+      max:
+        type: integer
+        description: 最大返回条数
+        required: false
+      full:
+        type: integer
+        description: 抓取前N条全文
+        required: false
 ---
 
-# Web Search Skill (v9.3.0)
+# free-web-search
+使用 Bing 搜索，自动带上今日日期，确保内容最新。
 
-Lightweight, fast web search for Claude Code / OpenClaw agents.
-Uses `httpx` (no browser required) with DuckDuckGo → Bing fallback.
+## 搜索词优化经验
 
-## When to Use
+**问题：** 中文分词容易出错，简短词组可能被拆分导致结果不准。
 
-- Looking up current docs, API changes, library releases
-- Researching error messages or Stack Overflow solutions
-- Fact-checking anything time-sensitive
-- Competitor/technology landscape research
+**示例：**
+- ❌ "美伊战争" → 被拆成"美"字，返回"美的空调"、"美缝"等无关结果
+- ✅ "美国伊朗冲突" 或 "以色列伊朗冲突" → 结果精准
 
-## Quick Start
-
-```bash
-# Basic search — returns structured text
-python scripts/web_search.py "your query here"
-
-# JSON output (recommended for agent pipelines)
-python scripts/web_search.py "your query here" --json
-
-# Force recency boost + year injection
-python scripts/web_search.py "your query here" --recent --json
-
-# Control how many pages to fetch (default: 5, max: 10)
-python scripts/web_search.py "your query here" --pages 3
-```
-
-## Output Format (JSON)
-
-```json
-{
-  "query": "original query",
-  "engine": "duckduckgo",
-  "total_results": 12,
-  "fetched_pages": 3,
-  "results": [
-    {
-      "rank": 1,
-      "title": "Page Title",
-      "url": "https://...",
-      "snippet": "Search engine snippet",
-      "text": "Extracted page content (up to 1000 chars)"
-    }
-  ]
-}
-```
-
-## Query Writing Tips (for agents)
-
-| Goal | Good Query |
-|------|-----------|
-| Library version | `httpx latest version 2024` |
-| Error fix | `python asyncio RuntimeError exact error message` |
-| API docs | `openai chat completions API parameters` |
-| News | `rust 2024 edition features` |
-
-- **Be specific** — include version numbers, language, framework
-- **Add year** for time-sensitive topics
-- **Use error text verbatim** for debugging queries
-
-## Workflow for Agents
-
-1. **Analyze the task** — identify what external knowledge is needed
-2. **Generate a focused query** — extract keywords, add context
-3. **Run search** — prefer `--json` for structured parsing
-4. **Parse results** — use `results[].text` for content, `results[].url` for citations
-5. **Synthesize** — combine findings to answer the original task
-
-## Error Handling
-
-If both engines fail, the script returns:
-```json
-{"error": "No results found for query: ...", "query": "..."}
-```
-
-Check `stderr` for per-step debug logs.
+**建议：**
+1. 避免使用简写/简称（如"美伊"、"俄乌"），用完整名称（"美国伊朗"、"俄罗斯乌克兰"）
+2. 如果简称搜索结果不准，自动尝试展开为完整名称重搜
+3. 搜索国际事件时，优先用"国家A+国家B+冲突/战争"格式
