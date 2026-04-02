@@ -1,6 +1,6 @@
 {
   "name": "soundai-llm",
-  "version": "2026.4.2",
+  "version": "1.0.2",
   "private": true,
   "description": "SoundAI LLM Provider for OpenClaw",
   "main": "dist/index.js",
