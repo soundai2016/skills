@@ -3,7 +3,16 @@
   "version": "2026.3.14",
   "private": true,
   "description": "SoundAI TTS Provider for OpenClaw",
-  "main": "index.ts",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "openclaw.plugin.json",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "esbuild index.ts --bundle --platform=node --format=esm --external:openclaw/* --outfile=dist/index.js"
+  },
   "openclaw": {
     "extensions": [
       "./dist/index.js"
@@ -13,6 +22,9 @@
     }
   },
   "devDependencies": {
-    "openclaw": "latest"
+    "@types/node": "^25.5.0",
+    "esbuild": "^0.27.5",
+    "openclaw": "latest",
+    "typescript": "^6.0.2"
   }
 }
