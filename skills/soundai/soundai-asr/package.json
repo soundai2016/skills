@@ -4,6 +4,15 @@
   "private": true,
   "description": "OpenClaw SoundAI media-understanding provider",
   "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "openclaw.plugin.json",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "esbuild index.ts --bundle --platform=node --format=esm --external:openclaw/* --outfile=dist/index.js"
+  },
   "openclaw": {
     "extensions": [
       "./dist/index.js"
