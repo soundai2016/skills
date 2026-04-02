@@ -1,16 +1,12 @@
 ---
 name: danube
-description: Connect your AI agent to 100+ services and 30 tools through a single API key
+description: Connect your agent to 100+ services and 30 tools across the internet. Search, authenticate, and execute tools from Gmail, Slack, GitHub, Notion, Google Calendar, and more — plus skills, workflows, agent management, and the Agent Web directory — all through a single API key.
+license: MIT
+compatibility: openclaw
 metadata:
-  openclaw:
-    requires:
-      env:
-        - DANUBE_API_KEY
-      bins:
-        - curl
-    primaryEnv: DANUBE_API_KEY
-    homepage: https://danubeai.com
-    always: false
+  author: danube
+  version: "4.0.0"
+  tags: [danube, mcp, apis, tools, workflows, agents, skills]
 ---
 
 # Danube — Connect Your Agent
@@ -21,9 +17,7 @@ Danube gives your AI agent access to 100+ services and 30 tools through a single
 
 ### Step 1: Get an API Key
 
-You can get your API key from the [Danube Dashboard](https://danubeai.com/dashboard) under Settings > API Keys.
-
-Alternatively, use the standard OAuth 2.0 Device Authorization flow (RFC 8628) — this requires the user to explicitly approve access in their browser:
+Run this to start the device authorization flow:
 
 ```bash
 curl -s -X POST https://api.danubeai.com/v1/auth/device/code \
@@ -33,7 +27,7 @@ curl -s -X POST https://api.danubeai.com/v1/auth/device/code \
 
 This returns a `device_code`, a `user_code`, and a `verification_url`.
 
-**The user must open the verification URL in their browser and enter the code to authorize access.**
+**Tell your human to open the verification URL and enter the user code.**
 
 Then poll for the API key:
 
@@ -64,29 +58,6 @@ Add this to your MCP config:
 }
 ```
 
-## Security & Privacy
-
-- **Credential encryption**: All stored credentials are encrypted at rest using AES-256 with a dedicated encryption key. Credentials are never logged or exposed in tool responses.
-- **User-scoped access**: Each API key is scoped to the authenticated user. You cannot access another user's credentials, tools, skills, or wallet.
-- **Row-level security**: Database access is enforced with row-level security policies — queries only return data belonging to the authenticated user.
-- **Spending controls**: Wallet operations are protected by configurable per-call and daily spending limits (in USDC). Agents cannot exceed these caps.
-- **Audit trail**: All tool executions are logged with timestamps, parameters, and results for user review.
-- **Credential retention**: Stored credentials persist until the user explicitly deletes them via the dashboard. They are not shared with other users or services.
-
-## Permissions & Scope
-
-The `DANUBE_API_KEY` grants:
-- **Read**: Browse services, search tools, view public skills/workflows/sites, check wallet balance and spending limits
-- **Execute**: Run tools and workflows (subject to spending limits)
-- **Write (user-scoped only)**: Store credentials for your account, create/update/delete your own skills and workflows, manage your spending limits
-- **Financial**: Fund your own wallet (requires user confirmation), execute paid tools (within spending caps)
-
-The API key does **not** grant:
-- Access to other users' data, credentials, or resources
-- Admin or platform-level operations
-- Ability to bypass spending limits
-- Access to raw database or infrastructure
-
 ### Step 3: Use Tools
 
 Once connected, you have access to 30 MCP tools:
@@ -97,27 +68,27 @@ Once connected, you have access to 30 MCP tools:
 - `get_service_tools(service_id, limit)` — Get all tools for a specific service
 
 **Execution**
-- `execute_tool(tool_id, tool_name, parameters)` — Call a specific, registered service integration (e.g. send an email, create a ticket). Each tool has a fixed schema — this is not arbitrary code execution.
-- `batch_execute_tools(calls)` — Call up to 10 registered service integrations concurrently in one request
+- `execute_tool(tool_id, tool_name, parameters)` — Run any tool by ID or name
+- `batch_execute_tools(calls)` — Run up to 10 tools concurrently in one request
 
 **Credentials & Wallet**
-- `store_credential(service_id, credential_type, credential_value)` — Save a user-provided API key for a specific service. **The agent must never solicit, infer, or guess credentials. Only store keys the user explicitly provides, and always confirm before storing.** Credentials are encrypted at rest (AES-256) and scoped to the user's account.
+- `store_credential(service_id, credential_type, credential_value)` — Save API keys for services that need them
 - `get_wallet_balance()` — Check your credit balance before running paid tools
-- `get_spending_limits()` — View your USDC per-call and daily spending limits
-- `update_spending_limits(max_per_call_usdc, daily_limit_usdc)` — Update your USDC spending limits. **Requires user approval.**
+- `get_spending_limits()` — View your current USDC per-call and daily spending limits
+- `update_spending_limits(max_per_call_usdc, daily_limit_usdc)` — Set per-call (up to $5) and daily USDC spending caps
 
 **Skills**
 - `search_skills(query, limit)` — Find reusable agent skills (instructions, scripts, templates)
 - `get_skill(skill_id, skill_name)` — Get full skill content by ID or name
-- `create_skill(name, skill_md_content, ...)` — Create a new private skill. Only operates on skills owned by the authenticated user.
-- `update_skill(skill_id, name, skill_md_content, ...)` — Update a skill you own
-- `delete_skill(skill_id)` — Delete a skill you own
+- `create_skill(name, skill_md_content, scripts, reference_files, assets, visibility, service_id)` — Create a new skill with SKILL.md content and optional files
+- `update_skill(skill_id, name, skill_md_content, scripts, reference_files, assets)` — Update an existing skill (owner only)
+- `delete_skill(skill_id)` — Delete a skill (owner only)
 
 **Workflows**
 - `list_workflows(query, limit)` — Browse public multi-tool workflows
-- `create_workflow(name, steps, description, visibility, tags)` — Create a new workflow. Only operates on workflows owned by the authenticated user.
-- `update_workflow(workflow_id, name, description, steps, visibility, tags)` — Update a workflow you own
-- `delete_workflow(workflow_id)` — Delete a workflow you own
+- `create_workflow(name, steps, description, visibility, tags)` — Create a new workflow
+- `update_workflow(workflow_id, name, description, steps, visibility, tags)` — Update an existing workflow (owner only)
+- `delete_workflow(workflow_id)` — Delete a workflow (owner only)
 - `execute_workflow(workflow_id, inputs)` — Run a multi-tool workflow
 - `get_workflow_execution(execution_id)` — Check workflow execution results
 
@@ -128,39 +99,264 @@ Once connected, you have access to 30 MCP tools:
 **Agent Management**
 - `register_agent(name, operator_email)` — Register a new autonomous agent with API key and wallet
 - `get_agent_info()` — Get the current agent's profile and wallet balance
-- `fund_agent_wallet(method, amount_cents)` — Fund wallet via card checkout or USDC. **Requires explicit user approval before funding.**
+- `fund_agent_wallet(method, amount_cents)` — Fund wallet via card checkout or USDC
 
 **Tool Quality**
 - `submit_rating(tool_id, rating, comment)` — Rate a tool 1-5 stars
-- `get_my_rating(tool_id)` — Check your existing rating for a tool
-- `get_tool_ratings(tool_id)` — Get average rating and count for a tool
+- `get_my_rating(tool_id)` — Check your own rating for a tool
+- `get_tool_ratings(tool_id)` — Get a tool's average rating and total rating count
 - `report_tool(tool_id, reason, description)` — Report a broken or degraded tool
 - `get_recommendations(tool_id, limit)` — Get tool recommendations based on co-usage patterns
 
 ### When a Tool Needs Credentials
 
-If `execute_tool` returns an `auth_required` error, it means the service needs an API key. **You must ask the user to provide the key** — never generate, guess, or infer credentials. The user can also configure credentials directly at https://danubeai.com/dashboard instead. Once the user explicitly provides a key and confirms they want to store it, call:
+If `execute_tool` returns an `auth_required` error, it means the service needs an API key. Ask your human for the key, then call:
 
 ```
 store_credential(service_id="...", credential_type="bearer", credential_value="the_key")
 ```
 
-Then retry the tool. Stored credentials are encrypted at rest and only accessible by the user's account.
+Then retry the tool.
+
+## What You Can Do with Danube
+
+Use Danube whenever a task involves an external service or API. Here are common use cases:
+
+### Send Emails and Messages
+- Send emails via Gmail, SendGrid, or Resend
+- Post messages to Slack channels
+- Send notifications to teams
+
+```
+search_tools("send email") → execute_tool(tool_id, {to, subject, body})
+```
+
+### Manage Code and Projects
+- Create GitHub issues and pull requests
+- List repositories and commits
+- Update Notion pages and databases
+
+```
+search_tools("create github issue") → execute_tool(tool_id, {repo, title, body})
+```
+
+### Work with Calendars and Scheduling
+- Check today's events on Google Calendar
+- Create new calendar events
+- Find open time slots
+
+```
+search_tools("calendar events today") → execute_tool(tool_id, {date})
+```
+
+### Read and Write Spreadsheets
+- Read data from Google Sheets
+- Append rows or update cells
+- Create new spreadsheets
+
+```
+search_tools("google sheets read") → execute_tool(tool_id, {spreadsheet_id, range})
+```
+
+### Search the Web and Get Data
+- Search the web with Exa or Serper
+- Scrape and extract web content with Firecrawl
+- Get weather forecasts, stock data, or country info
+
+```
+search_tools("web search") → execute_tool(tool_id, {query})
+```
+
+### Generate and Process Media
+- Generate images with Replicate or Stability AI
+- Transcribe audio with AssemblyAI
+- Remove image backgrounds with Remove.bg
+- Translate text with DeepL
+
+```
+search_tools("generate image") → execute_tool(tool_id, {prompt})
+```
+
+### Manage Infrastructure
+- Provision DigitalOcean droplets and databases
+- Manage Supabase projects
+- Handle Stripe payments and subscriptions
+
+```
+search_tools("create droplet") → execute_tool(tool_id, {name, region, size})
+```
+
+### Run Multi-Tool Workflows
+
+Chain multiple tools together into reusable workflows that pass data between steps automatically.
+
+```
+# Find existing workflows
+list_workflows(query="github to slack") → browse available workflows
+
+# Execute a workflow with inputs
+execute_workflow(workflow_id="...", inputs={"repo": "my-org/my-repo", "channel": "#dev"})
+
+# Check execution results
+get_workflow_execution(execution_id="...")
+
+# Create your own workflow
+create_workflow(
+  name="Daily Digest",
+  steps=[
+    {"step_number": 1, "tool_id": "...", "input_mapping": {"repo": "{{inputs.repo}}"}},
+    {"step_number": 2, "tool_id": "...", "input_mapping": {"text": "{{steps.1.result}}", "channel": "{{inputs.channel}}"}}
+  ],
+  tags=["digest", "github", "slack"]
+)
+
+# Update a workflow
+update_workflow(workflow_id="...", description="Updated daily digest", visibility="public")
+
+# Delete a workflow
+delete_workflow(workflow_id="...")
+```
+
+### Execute Tools in Batch
+
+Run multiple independent tool calls concurrently for faster results.
+
+```
+batch_execute_tools(calls=[
+  {"tool_id": "tool-uuid-1", "tool_input": {"query": "AI news"}},
+  {"tool_id": "tool-uuid-2", "tool_input": {"query": "tech stocks"}},
+  {"tool_id": "tool-uuid-3", "tool_input": {"location": "San Francisco"}}
+])
+```
+
+Each call returns independently — individual failures don't fail the batch.
+
+### Browse the Agent Web Directory
+
+Search and read structured information about any website in the directory.
+
+```
+# Find sites by topic
+search_sites(query="payment processing", category="saas")
+
+# Get structured data about a specific domain
+get_site_info(domain="stripe.com")
+→ Returns: identity, products, team, pricing, docs, FAQ, contact info, and more
+```
+
+### Manage Your Skills
+
+Create, update, and share reusable agent skills.
+
+```
+# Create a skill with SKILL.md content
+create_skill(
+  name="data-cleaning",
+  skill_md_content="# Data Cleaning\n\nStep-by-step guide for cleaning CSV data...",
+  scripts=[{"name": "clean.py", "content": "import pandas as pd\n..."}],
+  visibility="private"
+)
+
+# Update a skill you own
+update_skill(skill_id="...", skill_md_content="# Updated instructions...")
+
+# Delete a skill
+delete_skill(skill_id="...")
+```
+
+### Control Spending Limits
+
+Manage your USDC spending caps for paid tools.
+
+```
+# Check current limits
+get_spending_limits()
+→ Returns: max_per_call_usdc, daily_limit_usdc
+
+# Set a $2 per-call limit and $20 daily cap
+update_spending_limits(max_per_call_usdc=2.0, daily_limit_usdc=20.0)
+```
+
+### Rate and Report Tools
+
+Help improve tool quality by providing feedback.
+
+```
+# Rate a tool after using it
+submit_rating(tool_id="...", rating=5, comment="Fast and accurate")
+
+# Check your existing rating
+get_my_rating(tool_id="...")
+
+# See a tool's overall ratings
+get_tool_ratings(tool_id="...")
+→ Returns: average_rating, total_ratings
+
+# Report a broken tool
+report_tool(tool_id="...", reason="broken", description="Returns 500 error on all requests")
+
+# Get recommendations for related tools
+get_recommendations(tool_id="...", limit=5)
+```
+
+### Register and Fund Autonomous Agents
+
+Create standalone agent identities with their own API keys and wallets.
+
+```
+# Register a new agent (no auth required)
+register_agent(name="my-research-bot", operator_email="me@example.com")
+→ Returns: agent_id, api_key (save this!), wallet_id
+
+# Check agent profile and balance
+get_agent_info()
+
+# Fund the agent's wallet
+fund_agent_wallet(method="card_checkout", amount_cents=1000)  # $10.00
+fund_agent_wallet(method="crypto")  # Returns USDC deposit address on Base
+```
 
 ## Core Workflow
 
 Every tool interaction follows this pattern:
 
 1. **Search** — `search_tools("what you want to do")`
-2. **Check auth** — If the tool needs credentials, ask the user for the key and use `store_credential`, or guide the user to https://danubeai.com/dashboard
+2. **Check auth** — If the tool needs credentials, use `store_credential` or guide the user to https://danubeai.com/dashboard
 3. **Gather parameters** — Ask the user for any missing required info
-4. **Execute** — `execute_tool(tool_id, parameters)`
-5. **Report** — Tell the user what happened with specifics, not just "Done"
+4. **Confirm** — Get user approval before executing actions like sending emails or creating issues
+5. **Execute** — `execute_tool(tool_id, parameters)`
+6. **Report** — Tell the user what happened with specifics, not just "Done"
+
+## Available Services
+
+**Communication:** Gmail, Slack, SendGrid, Resend, Loops, AgentMail, Postmark
+
+**Development:** GitHub, Supabase, DigitalOcean, Stripe, Apify, Netlify, Render, Vercel, Railway, Neon, PlanetScale, Fly.io, Cloudflare Workers, Sentry
+
+**Productivity:** Notion, Google Calendar, Google Sheets, Google Drive, Google Docs, Monday, Typeform, Bitly, Airtable, Todoist, Linear, Asana, Trello, ClickUp, Jira, Calendly
+
+**Cloud & Infrastructure:** AWS (S3, Lambda, EC2), Google Cloud, Azure, Cloudflare, Heroku, Terraform
+
+**AI & Media:** Replicate, Together AI, Stability AI, AssemblyAI, Remove.bg, DeepL, ElevenLabs, Whisper, Midjourney, DALL-E, Claude, OpenAI
+
+**Search & Data:** Exa, Exa Websets, Firecrawl, Serper, Context7, Microsoft Learn, AlphaVantage, Clearbit, Hunter.io, Crunchbase, Diffbot
+
+**Finance:** Stripe, Plaid, Wise, Coinbase, PayPal, Square, QuickBooks
+
+**Social:** Twitter/X, LinkedIn, Discord, Reddit, Mastodon, Instagram, YouTube
+
+**Design & Analytics:** Figma, Canva, Mixpanel, Amplitude, Segment, PostHog, Google Analytics
+
+**Maps & Geo:** Google Maps, Mapbox, OpenStreetMap
+
+**Weather:** Open-Meteo, OpenWeather, WeatherAPI, Tomorrow.io
+
+**Public Data (No Auth Required):** Hacker News, REST Countries, Polymarket, Kalshi, Wikipedia, ArXiv, PubMed, SEC EDGAR
+
+**Deployment & DevOps:** GitHub Actions, CircleCI, Docker Hub, npm Registry, PyPI
 
 ## Links
 
 - Dashboard: https://danubeai.com/dashboard
 - Docs: https://docs.danubeai.com
 - MCP Server: https://mcp.danubeai.com/mcp
-- Privacy Policy: https://danubeai.com/privacy
-- Terms of Service: https://danubeai.com/terms
